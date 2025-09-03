@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,30 +19,33 @@ import {
   BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for demonstration
-const mockContent = [
-  {
-    id: "1",
-    title: "Getting Started",
-    type: "folder",
-    path: "/getting-started",
-    children: [
-      { id: "1-1", title: "Introduction", type: "page", path: "/docs/introduction" },
-      { id: "1-2", title: "Quick Start", type: "page", path: "/docs/quickstart" },
-    ]
-  },
-  {
-    id: "2",
-    title: "API Reference",
-    type: "folder", 
-    path: "/api",
-    children: [
-      { id: "2-1", title: "Content Management API", type: "page", path: "/docs/apis/content-management" },
-      { id: "2-2", title: "Authentication", type: "page", path: "/docs/auth/overview" },
-    ]
-  }
-];
+interface Folder {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+}
+
+interface Page {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  folder_id: string;
+  is_published: boolean;
+}
+
+interface ContentItem {
+  id: string;
+  name: string;
+  type: "folder" | "page";
+  slug: string;
+  folder_id?: string;
+  is_published?: boolean;
+  children?: ContentItem[];
+}
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,6 +55,69 @@ export default function Admin() {
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemContent, setNewItemContent] = useState("");
   const [newItemType, setNewItemType] = useState<"folder" | "page">("page");
+  const [selectedFolderId, setSelectedFolderId] = useState<string>("");
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [contentStructure, setContentStructure] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch content when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchContent();
+    }
+  }, [isAuthenticated]);
+
+  const generateSlug = (title: string) => {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  const fetchContent = async () => {
+    try {
+      // Fetch folders
+      const { data: foldersData, error: foldersError } = await supabase
+        .from('folders')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (foldersError) throw foldersError;
+
+      // Fetch pages
+      const { data: pagesData, error: pagesError } = await supabase
+        .from('pages')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (pagesError) throw pagesError;
+
+      setFolders(foldersData || []);
+      setPages(pagesData || []);
+      buildContentStructure(foldersData || [], pagesData || []);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      toast.error("Failed to fetch content");
+    }
+  };
+
+  const buildContentStructure = (foldersData: Folder[], pagesData: Page[]) => {
+    const structure = foldersData.map(folder => ({
+      id: folder.id,
+      name: folder.name,
+      type: "folder" as const,
+      slug: folder.slug,
+      children: pagesData
+        .filter(page => page.folder_id === folder.id)
+        .map(page => ({
+          id: page.id,
+          name: page.title,
+          type: "page" as const,
+          slug: page.slug,
+          folder_id: page.folder_id,
+          is_published: page.is_published
+        }))
+    }));
+    setContentStructure(structure);
+  };
 
   const handleLogin = () => {
     if (password === "admin123") {
@@ -62,19 +128,93 @@ export default function Admin() {
     }
   };
 
-  const handleSaveContent = () => {
+  const handleSaveContent = async () => {
     if (!newItemTitle.trim()) {
       toast.error("Please enter a title");
       return;
     }
-    
-    toast.success(`${newItemType === "folder" ? "Folder" : "Page"} "${newItemTitle}" created successfully`);
-    setNewItemTitle("");
-    setNewItemContent("");
+
+    if (newItemType === "page" && !selectedFolderId) {
+      toast.error("Please select a folder for the page");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const slug = generateSlug(newItemTitle);
+
+      if (newItemType === "folder") {
+        const { error } = await supabase
+          .from('folders')
+          .insert([{ name: newItemTitle, slug, description: newItemContent || "" }]);
+        
+        if (error) throw error;
+        toast.success(`Folder "${newItemTitle}" created successfully`);
+      } else {
+        const { error } = await supabase
+          .from('pages')
+          .insert([{
+            title: newItemTitle,
+            slug,
+            content: newItemContent,
+            folder_id: selectedFolderId,
+            is_published: false
+          }]);
+        
+        if (error) throw error;
+        toast.success(`Page "${newItemTitle}" created successfully`);
+      }
+
+      // Reset form
+      setNewItemTitle("");
+      setNewItemContent("");
+      setSelectedFolderId("");
+      
+      // Refresh content
+      fetchContent();
+    } catch (error: any) {
+      console.error('Error saving content:', error);
+      toast.error(error.message || "Failed to save content");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePublish = (item: any) => {
-    toast.success(`"${item.title}" published successfully`);
+  const handlePublish = async (item: ContentItem) => {
+    if (item.type === "page") {
+      try {
+        const { error } = await supabase
+          .from('pages')
+          .update({ is_published: !item.is_published })
+          .eq('id', item.id);
+        
+        if (error) throw error;
+        
+        toast.success(`Page "${item.name}" ${item.is_published ? 'unpublished' : 'published'} successfully`);
+        fetchContent();
+      } catch (error: any) {
+        console.error('Error updating page:', error);
+        toast.error("Failed to update page");
+      }
+    }
+  };
+
+  const handleDelete = async (item: ContentItem) => {
+    try {
+      if (item.type === "folder") {
+        const { error } = await supabase.from('folders').delete().eq('id', item.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('pages').delete().eq('id', item.id);
+        if (error) throw error;
+      }
+      
+      toast.success(`${item.type === "folder" ? "Folder" : "Page"} "${item.name}" deleted successfully`);
+      fetchContent();
+    } catch (error: any) {
+      console.error('Error deleting item:', error);
+      toast.error("Failed to delete item");
+    }
   };
 
   if (!isAuthenticated) {
@@ -196,12 +336,44 @@ export default function Admin() {
                   </div>
                   
                   {newItemType === "page" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="folder">Select Folder</Label>
+                        <select
+                          id="folder"
+                          value={selectedFolderId}
+                          onChange={(e) => setSelectedFolderId(e.target.value)}
+                          className="w-full px-3 py-2 border border-input rounded-md text-sm"
+                          required
+                        >
+                          <option value="">Choose a folder...</option>
+                          {folders.map((folder) => (
+                            <option key={folder.id} value={folder.id}>
+                              {folder.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="content">Content</Label>
+                        <Textarea
+                          id="content"
+                          placeholder="Write your documentation content here..."
+                          className="min-h-[200px]"
+                          value={newItemContent}
+                          onChange={(e) => setNewItemContent(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {newItemType === "folder" && (
                     <div className="space-y-2">
-                      <Label htmlFor="content">Content</Label>
+                      <Label htmlFor="description">Description (Optional)</Label>
                       <Textarea
-                        id="content"
-                        placeholder="Write your documentation content here..."
-                        className="min-h-[200px]"
+                        id="description"
+                        placeholder="Enter folder description..."
+                        className="min-h-[100px]"
                         value={newItemContent}
                         onChange={(e) => setNewItemContent(e.target.value)}
                       />
@@ -209,9 +381,9 @@ export default function Admin() {
                   )}
                   
                   <div className="flex items-center gap-2">
-                    <Button onClick={handleSaveContent} className="bg-gradient-primary">
+                    <Button onClick={handleSaveContent} disabled={loading} className="bg-gradient-primary">
                       <Save className="h-4 w-4 mr-2" />
-                      Save {newItemType === "folder" ? "Folder" : "Page"}
+                      {loading ? "Saving..." : `Save ${newItemType === "folder" ? "Folder" : "Page"}`}
                     </Button>
                     <Button variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
@@ -228,12 +400,12 @@ export default function Admin() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {mockContent.map((item) => (
+                    {contentStructure.map((item) => (
                       <div key={item.id} className="space-y-1">
                         <div className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
                           <div className="flex items-center gap-2">
                             <Folder className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{item.title}</span>
+                            <span className="font-medium">{item.name}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button size="sm" variant="ghost">
@@ -242,19 +414,24 @@ export default function Admin() {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              onClick={() => handlePublish(item)}
+                              onClick={() => handleDelete(item)}
                             >
-                              <Eye className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
-                        {item.children && (
+                        {item.children && item.children.length > 0 && (
                           <div className="ml-6 space-y-1">
-                            {item.children.map((child: any) => (
+                            {item.children.map((child: ContentItem) => (
                               <div key={child.id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
                                 <div className="flex items-center gap-2">
                                   <FileText className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm">{child.title}</span>
+                                  <span className="text-sm">{child.name}</span>
+                                  {child.is_published ? (
+                                    <Badge variant="default" className="text-xs">Published</Badge>
+                                  ) : (
+                                    <Badge variant="secondary" className="text-xs">Draft</Badge>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Button size="sm" variant="ghost">
@@ -266,6 +443,13 @@ export default function Admin() {
                                     onClick={() => handlePublish(child)}
                                   >
                                     <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => handleDelete(child)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
