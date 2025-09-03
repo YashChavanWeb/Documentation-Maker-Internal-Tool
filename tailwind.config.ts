@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -61,7 +62,27 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				doc: {
+					header: 'hsl(var(--doc-header))',
+					'header-foreground': 'hsl(var(--doc-header-foreground))',
+					'nav-active': 'hsl(var(--doc-nav-active))',
+					'nav-active-bg': 'hsl(var(--doc-nav-active-bg))',
+					'code-bg': 'hsl(var(--doc-code-bg))',
+					'border-light': 'hsl(var(--doc-border-light))'
 				}
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-subtle': 'var(--gradient-subtle)'
+			},
+			boxShadow: {
+				'sm': 'var(--shadow-sm)',
+				'md': 'var(--shadow-md)',
+				'lg': 'var(--shadow-lg)'
+			},
+			fontFamily: {
+				mono: 'var(--font-mono)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
