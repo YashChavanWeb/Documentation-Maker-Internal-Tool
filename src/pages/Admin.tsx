@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Plus, 
   FileText, 
@@ -16,10 +17,17 @@ import {
   Eye,
   Settings,
   Users,
-  BarChart3
+  BarChart3,
+  Link,
+  Image as ImageIcon,
+  Video
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { PreviewModal } from "@/components/PreviewModal";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import { SettingsPanel } from "@/components/SettingsPanel";
 
 interface Folder {
   id: string;
@@ -60,6 +68,8 @@ export default function Admin() {
   const [pages, setPages] = useState<Page[]>([]);
   const [contentStructure, setContentStructure] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   // Fetch content when authenticated
   useEffect(() => {
@@ -196,6 +206,76 @@ export default function Admin() {
         console.error('Error updating page:', error);
         toast.error("Failed to update page");
       }
+    }
+  };
+
+  const handleEdit = (item: ContentItem) => {
+    setEditingItem(item);
+    if (item.type === "page") {
+      const page = pages.find(p => p.id === item.id);
+      if (page) {
+        setNewItemTitle(page.title);
+        setNewItemContent(page.content || "");
+        setSelectedFolderId(page.folder_id || "");
+      }
+    } else {
+      const folder = folders.find(f => f.id === item.id);
+      if (folder) {
+        setNewItemTitle(folder.name);
+        setNewItemContent(folder.description || "");
+      }
+    }
+    setNewItemType(item.type);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem || !newItemTitle.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const slug = generateSlug(newItemTitle);
+
+      if (editingItem.type === "folder") {
+        const { error } = await supabase
+          .from('folders')
+          .update({ name: newItemTitle, slug, description: newItemContent || "" })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success(`Folder "${newItemTitle}" updated successfully`);
+      } else {
+        const { error } = await supabase
+          .from('pages')
+          .update({
+            title: newItemTitle,
+            slug,
+            content: newItemContent,
+            folder_id: selectedFolderId,
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        toast.success(`Page "${newItemTitle}" updated successfully`);
+      }
+
+      // Reset form
+      setEditingItem(null);
+      setNewItemTitle("");
+      setNewItemContent("");
+      setSelectedFolderId("");
+      setEditModalOpen(false);
+      
+      // Refresh content
+      fetchContent();
+    } catch (error: any) {
+      console.error('Error updating content:', error);
+      toast.error(error.message || "Failed to update content");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -356,12 +436,10 @@ export default function Admin() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="content">Content</Label>
-                        <Textarea
-                          id="content"
+                        <RichTextEditor
+                          content={newItemContent}
+                          onChange={setNewItemContent}
                           placeholder="Write your documentation content here..."
-                          className="min-h-[200px]"
-                          value={newItemContent}
-                          onChange={(e) => setNewItemContent(e.target.value)}
                         />
                       </div>
                     </>
@@ -385,7 +463,11 @@ export default function Admin() {
                       <Save className="h-4 w-4 mr-2" />
                       {loading ? "Saving..." : `Save ${newItemType === "folder" ? "Folder" : "Page"}`}
                     </Button>
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setPreviewOpen(true)}
+                      disabled={!newItemTitle.trim() || newItemType === "folder"}
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       Preview
                     </Button>
@@ -408,7 +490,11 @@ export default function Admin() {
                             <span className="font-medium">{item.name}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Button size="sm" variant="ghost">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleEdit(item)}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
                             <Button 
@@ -434,7 +520,11 @@ export default function Admin() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <Button size="sm" variant="ghost">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost"
+                                    onClick={() => handleEdit(child)}
+                                  >
                                     <Edit className="h-3 w-3" />
                                   </Button>
                                   <Button 
@@ -477,30 +567,108 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics Dashboard</CardTitle>
-                <CardDescription>View your documentation usage statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
-              </CardContent>
-            </Card>
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>Configure your documentation system</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Settings panel coming soon...</p>
-              </CardContent>
-            </Card>
+            <SettingsPanel />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Preview Modal */}
+      <PreviewModal
+        title={newItemTitle}
+        content={newItemContent}
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
+
+      {/* Edit Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Edit {editingItem?.type === "folder" ? "Folder" : "Page"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                placeholder={`Enter ${editingItem?.type} title`}
+                value={newItemTitle}
+                onChange={(e) => setNewItemTitle(e.target.value)}
+              />
+            </div>
+            
+            {editingItem?.type === "page" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-folder">Select Folder</Label>
+                  <select
+                    id="edit-folder"
+                    value={selectedFolderId}
+                    onChange={(e) => setSelectedFolderId(e.target.value)}
+                    className="w-full px-3 py-2 border border-input rounded-md text-sm"
+                    required
+                  >
+                    <option value="">Choose a folder...</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-content">Content</Label>
+                  <RichTextEditor
+                    content={newItemContent}
+                    onChange={setNewItemContent}
+                    placeholder="Write your documentation content here..."
+                  />
+                </div>
+              </>
+            )}
+
+            {editingItem?.type === "folder" && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <RichTextEditor
+                  content={newItemContent}
+                  onChange={setNewItemContent}
+                  placeholder="Enter folder description..."
+                />
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2 pt-4">
+              <Button onClick={handleSaveEdit} disabled={loading} className="bg-gradient-primary">
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? "Saving..." : `Update ${editingItem?.type === "folder" ? "Folder" : "Page"}`}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setPreviewOpen(true)}
+                disabled={!newItemTitle.trim() || editingItem?.type === "folder"}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setEditModalOpen(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
