@@ -1,10 +1,20 @@
+import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
 import { DocLayout } from "@/components/DocLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Book, Code, Database, Key, Users, Zap, ArrowRight, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Book, 
+  ExternalLink, 
+  MessageCircle, 
+  Users, 
+  Code, 
+  Database, 
+  Key, 
+  Zap 
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Folder {
@@ -24,31 +34,28 @@ interface Page {
 }
 
 interface Section {
-  id: string;
-  title: string;
-  description: string;
+  folder: Folder;
+  pages: Page[];
   icon: any;
-  badge: string;
-  badgeVariant: "default" | "secondary" | "outline" | "destructive";
-  links: Array<{ title: string; path: string; }>;
+  badge?: { text: string; variant: "default" | "secondary" | "outline" | "destructive"; };
 }
 
 const iconMap: { [key: string]: any } = {
-  'getting-started': Book,
-  'developers': Code,
-  'apis': Database,
+  'get-started': Book,
+  'documentation': Code,
+  'agents': Zap,
   'authentication': Key,
-  'personalize': Users,
-  'insights': Zap,
+  'apis': Database,
+  'community': Users,
 };
 
-const badgeMap: { [key: string]: { badge: string; variant: "default" | "secondary" | "outline" | "destructive" } } = {
-  'getting-started': { badge: 'Start Here', variant: 'default' },
-  'developers': { badge: 'Popular', variant: 'secondary' },
-  'apis': { badge: 'v3.0', variant: 'outline' },
-  'authentication': { badge: 'Security', variant: 'destructive' },
-  'personalize': { badge: 'Premium', variant: 'secondary' },
-  'insights': { badge: 'Analytics', variant: 'outline' },
+const badgeMap: { [key: string]: { text: string; variant: "default" | "secondary" | "outline" | "destructive" } } = {
+  'get-started': { text: 'Start Here', variant: 'default' },
+  'documentation': { text: 'Popular', variant: 'secondary' },
+  'agents': { text: 'New', variant: 'outline' },
+  'authentication': { text: 'Security', variant: 'destructive' },
+  'apis': { text: 'v3.0', variant: 'outline' },
+  'community': { text: 'Premium', variant: 'secondary' },
 };
 
 export default function Documentation() {
@@ -82,19 +89,13 @@ export default function Documentation() {
       const sectionsData = folders?.map((folder: Folder) => {
         const folderPages = pages?.filter((page: Page) => page.folder_id === folder.id) || [];
         const iconComponent = iconMap[folder.slug] || Book;
-        const badgeInfo = badgeMap[folder.slug] || { badge: 'New', variant: 'secondary' as const };
+        const badgeInfo = badgeMap[folder.slug];
 
         return {
-          id: folder.id,
-          title: folder.name,
-          description: folder.description || `Learn about ${folder.name}`,
+          folder,
+          pages: folderPages,
           icon: iconComponent,
-          badge: badgeInfo.badge,
-          badgeVariant: badgeInfo.variant,
-          links: folderPages.map((page: Page) => ({
-            title: page.title,
-            path: `/docs/${folder.slug}/${page.slug}`,
-          })),
+          badge: badgeInfo,
         };
       }) || [];
 
@@ -105,94 +106,104 @@ export default function Documentation() {
       setLoading(false);
     }
   };
+
   return (
     <DocLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="px-8 py-6">
         {/* Hero Section */}
-        <div className="text-center space-y-4 py-8">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Welcome to our Documentation
+        <div className="mb-16">
+          <h1 className="text-4xl font-bold text-foreground mb-4 tracking-tight">
+            Documentation
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to build amazing applications with our platform. 
-            Get started quickly with our guides and explore our comprehensive API reference.
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl leading-relaxed">
+            Comprehensive guides and documentation to help you get started with our platform quickly and efficiently.
           </p>
-          <div className="flex items-center justify-center gap-4 pt-4">
-            <Button size="lg" className="bg-gradient-primary hover:opacity-90">
+          <div className="flex gap-4">
+            <Button size="lg" className="gap-2">
+              <Book className="h-5 w-5" />
               Get Started
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" size="lg">
-              View API Reference
-              <ExternalLink className="ml-2 h-4 w-4" />
+            <Button variant="outline" size="lg" className="gap-2">
+              <ExternalLink className="h-5 w-5" />
+              View Examples
             </Button>
           </div>
         </div>
 
         {/* Documentation Sections */}
         {loading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading documentation...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="p-6 bg-card border-doc-border-light">
+                <Skeleton className="h-8 w-8 mb-4" />
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </Card>
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <Card key={section.id} className="hover:shadow-md transition-shadow border-doc-border-light">
-                  <CardHeader className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="p-2 bg-doc-nav-active-bg rounded-lg">
-                        <Icon className="h-6 w-6 text-doc-nav-active" />
-                      </div>
-                      <Badge variant={section.badgeVariant}>{section.badge}</Badge>
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{section.title}</CardTitle>
-                      <CardDescription className="text-sm">
-                        {section.description}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      {section.links.length > 0 ? (
-                        section.links.map((link) => (
-                          <Link
-                            key={link.path}
-                            to={link.path}
-                            className="flex items-center justify-between text-sm text-muted-foreground hover:text-foreground transition-colors py-1 group"
-                          >
-                            <span>{link.title}</span>
-                            <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </Link>
-                        ))
-                      ) : (
-                        <p className="text-xs text-muted-foreground">No pages available</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            {sections.map((section) => (
+              <Card key={section.folder.id} className="p-6 bg-card border-doc-border-light hover:border-border transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <section.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {section.folder.name}
+                    </h3>
+                    {section.badge && (
+                      <Badge variant={section.badge.variant} className="mt-1">
+                        {section.badge.text}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <p className="text-muted-foreground mb-4 leading-relaxed">
+                  {section.folder.description}
+                </p>
+                
+                <div className="space-y-2">
+                  {section.pages.slice(0, 3).map((page) => (
+                    <NavLink
+                      key={page.id}
+                      to={`/docs/${section.folder.slug}/${page.slug}`}
+                      className="block text-sm text-primary hover:text-primary-hover transition-colors"
+                    >
+                      → {page.title}
+                    </NavLink>
+                  ))}
+                  {section.pages.length > 3 && (
+                    <p className="text-xs text-muted-foreground">
+                      +{section.pages.length - 3} more pages
+                    </p>
+                  )}
+                </div>
+              </Card>
+            ))}
           </div>
         )}
 
-        {/* Quick Links */}
-        <div className="border-t border-doc-border-light pt-8">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-semibold">Need Help?</h2>
-            <p className="text-muted-foreground">
-              Can't find what you're looking for? Our support team is here to help.
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Button variant="outline">
-                Contact Support
-              </Button>
-              <Button variant="outline">
-                Join Community
-              </Button>
-            </div>
+        {/* Need Help Section */}
+        <div className="text-center bg-card border border-doc-border-light rounded-lg p-8">
+          <h2 className="text-2xl font-semibold text-foreground mb-4">
+            Need Help?
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Can't find what you're looking for? We're here to help.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button variant="outline" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Contact Support
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <Users className="h-4 w-4" />
+              Join Community
+            </Button>
           </div>
         </div>
       </div>

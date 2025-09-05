@@ -2,132 +2,153 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional Documentation Design System */
-
-@layer base {
-  :root {
-    /* Documentation-focused color palette */
-    --background: 0 0% 100%;
-    --foreground: 213 27% 22%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 213 27% 22%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 213 27% 22%;
-
-    /* Professional blue primary */
-    --primary: 216 87% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 216 87% 47%;
-
-    /* Subtle grays */
-    --secondary: 210 17% 98%;
-    --secondary-foreground: 213 27% 22%;
-
-    --muted: 210 17% 98%;
-    --muted-foreground: 215 25% 54%;
-
-    --accent: 210 17% 95%;
-    --accent-foreground: 213 27% 22%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 214 20% 91%;
-    --input: 214 20% 91%;
-    --ring: 216 87% 52%;
-
-    --radius: 0.375rem;
-
-    /* Sidebar specific colors */
-    --sidebar-background: 210 17% 98%;
-    --sidebar-foreground: 213 27% 22%;
-    --sidebar-primary: 216 87% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 17% 95%;
-    --sidebar-accent-foreground: 213 27% 22%;
-    --sidebar-border: 214 20% 91%;
-    --sidebar-ring: 216 87% 52%;
-
-    /* Documentation specific tokens */
-    --doc-header: 0 0% 100%;
-    --doc-header-foreground: 213 27% 22%;
-    --doc-nav-active: 216 87% 52%;
-    --doc-nav-active-bg: 216 87% 97%;
-    --doc-code-bg: 210 17% 98%;
-    --doc-border-light: 214 20% 94%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(216 87% 52%), hsl(216 87% 47%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 17% 99%));
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(216 87% 52% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(216 87% 52% / 0.1), 0 2px 4px -1px hsl(216 87% 52% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(216 87% 52% / 0.1), 0 4px 6px -2px hsl(216 87% 52% / 0.05);
-    
-    /* Typography */
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  }
-
-  .dark {
-    --background: 213 27% 9%;
-    --foreground: 0 0% 98%;
-
-    --card: 213 27% 9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 213 27% 9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 216 87% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 216 87% 57%;
-
-    --secondary: 213 27% 15%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 213 27% 15%;
-    --muted-foreground: 215 25% 65%;
-
-    --accent: 213 27% 15%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 213 27% 20%;
-    --input: 213 27% 20%;
-    --ring: 216 87% 52%;
-
-    --sidebar-background: 213 27% 12%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 216 87% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 27% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 213 27% 20%;
-    --sidebar-ring: 216 87% 52%;
-
-    --doc-header: 213 27% 12%;
-    --doc-header-foreground: 0 0% 98%;
-    --doc-nav-active: 216 87% 52%;
-    --doc-nav-active-bg: 216 87% 15%;
-    --doc-code-bg: 213 27% 15%;
-    --doc-border-light: 213 27% 18%;
-    
-    --gradient-primary: linear-gradient(135deg, hsl(216 87% 52%), hsl(216 87% 57%));
-    --gradient-subtle: linear-gradient(180deg, hsl(213 27% 9%), hsl(213 27% 11%));
-  }
+/* Design System Variables */
+:root {
+  /* Base Colors - Dark Theme */
+  --background: 210 11% 9%;
+  --foreground: 213 31% 91%;
+  
+  /* Primary Brand */
+  --primary: 221 83% 53%;
+  --primary-foreground: 210 40% 98%;
+  --primary-hover: 221 83% 45%;
+  
+  /* Secondary */
+  --secondary: 210 11% 15%;
+  --secondary-foreground: 210 11% 71%;
+  
+  /* Accent */
+  --accent: 210 11% 15%;
+  --accent-foreground: 210 11% 71%;
+  
+  /* Muted */
+  --muted: 210 11% 13%;
+  --muted-foreground: 215 13% 65%;
+  
+  /* Destructive */
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  
+  /* Border & Input */
+  --border: 210 11% 18%;
+  --input: 210 11% 13%;
+  --ring: 221 83% 53%;
+  
+  /* Card & Popover */
+  --card: 210 11% 13%;
+  --card-foreground: 213 31% 91%;
+  --popover: 210 11% 9%;
+  --popover-foreground: 213 31% 91%;
+  
+  /* Sidebar Specific */
+  --sidebar-background: 210 11% 7%;
+  --sidebar-foreground: 213 31% 91%;
+  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 210 11% 13%;
+  --sidebar-accent-foreground: 213 31% 91%;
+  --sidebar-border: 210 11% 15%;
+  --sidebar-ring: 221 83% 53%;
+  
+  /* Documentation Specific */
+  --doc-header: 210 11% 7%;
+  --doc-header-foreground: 213 31% 91%;
+  --doc-nav-active: 221 83% 53%;
+  --doc-nav-active-bg: 221 83% 53% / 0.1;
+  --doc-code-bg: 210 11% 5%;
+  --doc-border-light: 210 11% 15%;
+  --doc-content-bg: 210 11% 9%;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 45%));
+  --gradient-subtle: linear-gradient(180deg, hsl(210 11% 9%), hsl(210 11% 7%));
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 hsl(210 11% 3% / 0.3);
+  --shadow-md: 0 4px 6px -1px hsl(210 11% 3% / 0.3), 0 2px 4px -1px hsl(210 11% 3% / 0.2);
+  --shadow-lg: 0 10px 15px -3px hsl(210 11% 3% / 0.3), 0 4px 6px -2px hsl(210 11% 3% / 0.2);
+  
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  
+  /* Border Radius */
+  --radius: 0.375rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+.dark {
+  /* Already using dark theme values above */
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Documentation specific styles */
+.doc-content h1 {
+  @apply text-3xl font-bold tracking-tight mb-6;
+}
+
+.doc-content h2 {
+  @apply text-2xl font-semibold tracking-tight mb-4 mt-8;
+}
+
+.doc-content h3 {
+  @apply text-xl font-semibold mb-3 mt-6;
+}
+
+.doc-content p {
+  @apply mb-4 leading-7;
+}
+
+.doc-content code {
+  @apply px-1.5 py-0.5 rounded text-sm font-mono bg-muted;
+}
+
+.doc-content pre {
+  @apply p-4 rounded-lg bg-doc-code-bg overflow-x-auto;
+}
+
+.doc-content pre code {
+  @apply p-0 bg-transparent;
+}
+
+/* Sidebar styles */
+.sidebar-nav-item {
+  @apply flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all duration-200;
+}
+
+.sidebar-nav-item:hover {
+  @apply bg-sidebar-accent;
+}
+
+.sidebar-nav-item.active {
+  @apply bg-doc-nav-active-bg text-doc-nav-active font-medium;
+}
+
+.sidebar-section-title {
+  @apply px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider;
+}
+
+/* Table of contents styles */
+.toc-link {
+  @apply text-sm text-muted-foreground hover:text-foreground transition-colors duration-200;
+}
+
+.toc-link.active {
+  @apply text-doc-nav-active font-medium;
+}
+
+/* Header styles */
+.header-nav-item {
+  @apply px-4 py-2 text-sm font-medium transition-colors duration-200 hover:text-foreground;
+}
+
+.header-nav-item.active {
+  @apply text-foreground border-b-2 border-doc-nav-active;
 }

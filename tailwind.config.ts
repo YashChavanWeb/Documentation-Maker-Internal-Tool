@@ -69,7 +69,8 @@ export default {
 					'nav-active': 'hsl(var(--doc-nav-active))',
 					'nav-active-bg': 'hsl(var(--doc-nav-active-bg))',
 					'code-bg': 'hsl(var(--doc-code-bg))',
-					'border-light': 'hsl(var(--doc-border-light))'
+					'border-light': 'hsl(var(--doc-border-light))',
+					'content-bg': 'hsl(var(--doc-content-bg))'
 				}
 			},
 			backgroundImage: {

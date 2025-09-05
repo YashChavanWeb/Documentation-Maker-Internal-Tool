@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Book, Code, Settings, Users, Key, Database, FileText, Zap } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { ChevronDown, ChevronRight, FileText, Folder, Book, Settings, BarChart3, Users, HelpCircle, Zap } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,11 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Folder {
   id: string;
@@ -38,115 +40,82 @@ interface DocSidebarProps {
   loading: boolean;
 }
 
-const iconMap: { [key: string]: any } = {
-  'getting-started': Book,
-  'developers': Code,
-  'apis': Database,
-  'authentication': Key,
-  'personalize': Users,
-  'insights': Zap,
+const iconMap: Record<string, any> = {
+  "get-started": Book,
+  "documentation": FileText,
+  "agents": Zap,
+  "settings": Settings,
+  "analytics": BarChart3,
+  "community": Users,
+  "help": HelpCircle,
 };
 
 export function DocSidebar({ folders, pages, loading }: DocSidebarProps) {
-  const { state } = useSidebar();
   const location = useLocation();
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["getting-started"]));
-  
-  const isCollapsed = state === "collapsed";
+  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
 
-  const toggleSection = (sectionId: string) => {
-    const newOpenSections = new Set(openSections);
-    if (newOpenSections.has(sectionId)) {
-      newOpenSections.delete(sectionId);
-    } else {
-      newOpenSections.add(sectionId);
-    }
-    setOpenSections(newOpenSections);
-  };
-
-  const isActive = (path: string) => location.pathname === path;
-  
-  const isParentActive = (folder: Folder) => {
-    const folderPages = pages.filter(page => page.folder_id === folder.id);
-    return folderPages.some(page => isActive(`/docs/${folder.slug}/${page.slug}`));
-  };
-
-  if (loading) {
-    return (
-      <Sidebar className="border-r border-doc-border-light">
-        <SidebarContent className="p-0">
-          <div className="p-4 border-b border-doc-border-light">
-            <h2 className="text-lg font-semibold text-foreground">Documentation</h2>
-          </div>
-          <div className="p-2 space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-8 bg-muted rounded"></div>
+  return (
+    <Sidebar className="border-r border-doc-border-light bg-sidebar-background w-64">
+      <SidebarContent className="py-6">
+        {loading ? (
+          <div className="space-y-4 px-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <div className="pl-4 space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
               </div>
             ))}
           </div>
-        </SidebarContent>
-      </Sidebar>
-    );
-  }
+        ) : (
+          <div className="space-y-6">
+            {folders.map((folder) => {
+              const folderPages = pages.filter(page => page.folder_id === folder.id);
+              const IconComponent = iconMap[folder.slug] || Folder;
+              const isActive = folderPages.some(page => 
+                location.pathname === `/docs/${folder.slug}/${page.slug}`
+              );
+              const isOpen = openSections[folder.id] ?? isActive;
 
-  return (
-    <Sidebar className="border-r border-doc-border-light">
-      <SidebarContent className="p-0">
-        <div className="p-4 border-b border-doc-border-light">
-          <h2 className="text-lg font-semibold text-foreground">Documentation</h2>
-        </div>
-        
-        <div className="p-2 space-y-1">
-          {folders.map((folder) => {
-            const Icon = iconMap[folder.slug] || Book;
-            const isOpen = openSections.has(folder.id);
-            const hasActiveChild = isParentActive(folder);
-            const folderPages = pages.filter(page => page.folder_id === folder.id);
-            
-            return (
-              <Collapsible key={folder.id} open={isOpen} onOpenChange={() => toggleSection(folder.id)}>
-                <CollapsibleTrigger className="w-full">
-                  <div className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent",
-                    hasActiveChild && "bg-doc-nav-active-bg text-doc-nav-active"
-                  )}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{folder.name}</span>}
-                    </div>
-                    {!isCollapsed && (
-                      isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+              return (
+                <div key={folder.id}>
+                  <Collapsible
+                    open={isOpen}
+                    onOpenChange={(open) => setOpenSections(prev => ({
+                      ...prev,
+                      [folder.id]: open
+                    }))}
+                  >
+                    <CollapsibleTrigger className="sidebar-section-title w-full text-left">
+                      {folder.name}
+                    </CollapsibleTrigger>
+
+                    {folderPages.length > 0 && (
+                      <CollapsibleContent className="mt-2">
+                        <div className="space-y-1">
+                          {folderPages.map((page) => (
+                            <NavLink
+                              key={page.id}
+                              to={`/docs/${folder.slug}/${page.slug}`}
+                              className={({ isActive }) =>
+                                `sidebar-nav-item ${isActive ? "active" : ""}`
+                              }
+                            >
+                              <FileText className="h-4 w-4" />
+                              <span>{page.title}</span>
+                            </NavLink>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
                     )}
-                  </div>
-                </CollapsibleTrigger>
-                
-                {!isCollapsed && (
-                  <CollapsibleContent className="ml-6 mt-1 space-y-1">
-                    {folderPages.length > 0 ? (
-                      folderPages.map((page) => (
-                        <NavLink
-                          key={page.id}
-                          to={`/docs/${folder.slug}/${page.slug}`}
-                          className={({ isActive }) => cn(
-                            "block px-3 py-1.5 text-sm text-muted-foreground rounded-md transition-colors hover:bg-accent hover:text-foreground",
-                            isActive && "bg-doc-nav-active-bg text-doc-nav-active font-medium"
-                          )}
-                        >
-                          {page.title}
-                        </NavLink>
-                      ))
-                    ) : (
-                      <div className="px-3 py-1.5 text-xs text-muted-foreground">
-                        No pages available
-                      </div>
-                    )}
-                  </CollapsibleContent>
-                )}
-              </Collapsible>
-            );
-          })}
-        </div>
+                  </Collapsible>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );
