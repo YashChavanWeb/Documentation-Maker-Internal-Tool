@@ -1,33 +1,22 @@
-# Welcome to your Lovable project
+# Documentation Maker Internal Tool
 
-## Project info
+Web-based application designed to create, manage, and visualize documentation with a sleek and intuitive UI. This tool comes with integrated features like rich text editing, analytics dashboard, settings panel, and table of contents, all powered by modern web technologies.
 
-**URL**: https://lovable.dev/projects/344b9cbc-4207-4d09-9da2-1d75ba60d345
+## Features
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/344b9cbc-4207-4d09-9da2-1d75ba60d345) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* **Rich Text Editor**: Create and edit documentation with ease using a fully functional rich text editor.
+* **Analytics Dashboard**: Get insights into user interactions and documentation usage with real-time analytics.
+* **Responsive Design**: Fully responsive interface to ensure smooth user experience across all devices.
+* **Modular Architecture**: Organize your project with reusable components and hooks for better scalability and maintainability.
 
 Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone github.com/YashChavanWeb/Documentation-Maker-Internal-Tool.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd cd Documentation-Maker-Internal-Tool
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -35,20 +24,6 @@ npm i
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
 
@@ -60,14 +35,54 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Directory Structure
 
-Simply open [Lovable](https://lovable.dev/projects/344b9cbc-4207-4d09-9da2-1d75ba60d345) and click on Share -> Publish.
+Here’s an overview of the key files and directories:
 
-## Can I connect a custom domain to my Lovable project?
+```
+Directory structure:
+└── yashchavanweb-documentation-maker-internal-tool/
+    ├── README.md
+    ├── public/
+    │   └── robots.txt
+    ├── src/
+    │   ├── App.css
+    │   ├── App.tsx
+    │   ├── index.css
+    │   ├── main.tsx
+    │   ├── vite-env.d.ts
+    │   ├── components/
+    │   │   ├── AnalyticsDashboard.tsx
+    │   │   ├── DocHeader.tsx
+    │   │   ├── DocLayout.tsx
+    │   │   ├── DocSidebar.tsx
+    │   │   ├── PreviewModal.tsx
+    │   │   ├── RichTextEditor.tsx
+    │   │   ├── SettingsPanel.tsx
+    │   │   ├── TableOfContents.tsx
+    │   │     
+    │   ├── hooks/
+    │   │   ├── use-mobile.tsx
+    │   │   ├── use-toast.ts
+    │   │   └── useAnalytics.tsx
+    │   │  
+    │   ├── integrations/
+    │   │   └── supabase/
+    │   │       ├── client.ts
+    │   │       └── types.ts
+    │   ├── lib/
+    │   │   └── utils.ts
+    │   │  
+    │   └── pages/
+    │       ├── Admin.tsx
+    │       ├── DocPage.tsx
+    │       ├── Documentation.tsx
+    │       ├── Index.tsx
+    │       └── NotFound.tsx
+    └── supabase/
+        ├── config.toml
+        └── migrations/
+            └── 20250903174759_bb0fcb15-b23f-4940-b01b-64f750ca3d64.sql
 
-Yes, you can!
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
